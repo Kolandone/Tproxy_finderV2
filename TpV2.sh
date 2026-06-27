@@ -1,8 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-
 RAW_URL="https://raw.githubusercontent.com/Kolandone/v2raycollector/refs/heads/main/proxy.txt"
-
 
 TOP_COUNT=10
 MAX_JOBS=12
@@ -11,7 +9,6 @@ PING_TIMEOUT=2
 SHOW_PING_INFO="no"   
 
 WORKDIR="$PREFIX/tmp/mtproto_tcp_$$"
-
 
 GREEN="\033[1;32m"
 YELLOW="\033[1;33m"
@@ -44,26 +41,44 @@ banner() {
     echo -e "${RESET}"
 }
 
-need_cmd() {
-    command -v "$1" >/dev/null 2>&1
-}
-
 check_dependencies() {
-    local missing=()
-    for cmd in curl bash awk sed grep cut sort timeout date; do
-        need_cmd "$cmd" || missing+=("$cmd")
-    done
+    local update_done=false
+
+    install_missing() {
+        local cmd="$1"
+        local pkg="$2"
+        
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            if [ "$update_done" = false ]; then
+                print_yellow "🔄 Updating Termux package lists..."
+                pkg update -y -o Dpkg::Options::="--force-confold" >/dev/null 2>&1
+                update_done=true
+            fi
+            print_cyan "📥 Installing $pkg..."
+            pkg install "$pkg" -y -o Dpkg::Options::="--force-confold" >/dev/null 2>&1
+        fi
+    }
+
+    install_missing "curl" "curl"
+    install_missing "awk" "gawk"
+    install_missing "sed" "sed"
+    install_missing "grep" "grep"
+    install_missing "timeout" "coreutils"
+    install_missing "cut" "coreutils"
+    install_missing "sort" "coreutils"
+    install_missing "date" "coreutils"
 
     if [[ "$SHOW_PING_INFO" == "yes" ]]; then
-        need_cmd ping || missing+=("ping")
+        install_missing "ping" "iputils"
     fi
 
-    if [[ ${#missing[@]} -gt 0 ]]; then
-        print_red "Missing commands: ${missing[*]}"
-        echo
-        print_yellow "Install required packages with:"
-        echo "pkg update && pkg install bash curl coreutils grep sed gawk iputils -y"
-        exit 1
+    if ! command -v termux-open-url >/dev/null 2>&1; then
+        if [ "$update_done" = false ]; then
+            pkg update -y -o Dpkg::Options::="--force-confold" >/dev/null 2>&1
+            update_done=true
+        fi
+        print_cyan "📥 Installing termux-api..."
+        pkg install termux-api -y -o Dpkg::Options::="--force-confold" >/dev/null 2>&1
     fi
 }
 
@@ -122,7 +137,6 @@ get_ping_info() {
     [[ -n "$out" ]] && echo "$out" || echo "-"
 }
 
- 
 tcp_latency_ms() {
     local host="$1"
     local port="$2"
@@ -149,7 +163,6 @@ tcp_latency_ms() {
             total_diff=$((total_diff + diff))
             sleep 0.05 
         else
-            
             echo "999999"
             return
         fi
@@ -196,7 +209,6 @@ check_one_proxy() {
     tg_link=$(make_tg_link "$server" "$port" "$secret")
     https_link=$(make_https_link "$server" "$port" "$secret")
 
-    
     echo "${tcp_ms}|${ping_ms}|${server}|${port}|${secret}|${tg_link}|${https_link}" >> "$WORKDIR/results.txt"
     print_green "OK   $server:$port   Avg TCP: ${tcp_ms}ms"
 }
@@ -275,7 +287,7 @@ interactive_open() {
         print_yellow "Opening in Telegram..."
         termux-open-url "$tg_link" 2>/dev/null || termux-open-url "$https_link" 2>/dev/null
     else
-        print_red "termux-open-url not found. Install it via 'pkg install termux-api'."
+        print_red "termux-open-url not found."
         print_yellow "You can copy and open the link above manually."
     fi
 }
@@ -308,7 +320,6 @@ main() {
         check_one_proxy "$proxy" &
     done <<< "$proxies"
 
-    
     wait
 
     if [[ ! -s "$WORKDIR/results.txt" ]]; then
