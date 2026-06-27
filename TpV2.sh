@@ -34,9 +34,9 @@ banner() {
     clear
     echo -e "${MAGENTA}"
     echo "╔════════════════════════════════════════════════════╗"
-    echo "║                  MTProto Proxy Finder v2                 ║"
-    echo "║                    TELEGRAM : KOLANDJS1                  ║"
-    echo "║                     GITHUB : KOLANDONE                   ║"
+    echo "║                  MTProto Proxy Finder v2             ║"
+    echo "║                    TELEGRAM : KOLANDJS1              ║"
+    echo "║                     GITHUB : KOLANDONE               ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
 }
