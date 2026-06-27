@@ -3,7 +3,7 @@
 RAW_URL="https://raw.githubusercontent.com/Kolandone/v2raycollector/refs/heads/main/proxy.txt"
 
 TOP_COUNT=10
-MAX_JOBS=12
+MAX_JOBS=6
 TCP_TIMEOUT=3
 PING_TIMEOUT=2
 SHOW_PING_INFO="no"   
